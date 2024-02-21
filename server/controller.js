@@ -1,4 +1,4 @@
-const { fetchTopics, fetchArticleById, fetchArticles } = require('./model');
+const { fetchTopics, fetchArticleById, fetchArticles, fetchCommentsByArticleId } = require('./model');
 
 exports.getTopics = (req, res, next) => {
     fetchTopics()
@@ -24,3 +24,16 @@ exports.getArticles = (req, res, next) => {
         })
         .catch(next)
 }
+
+exports.getCommentsByArticleId = (req, res, next) => {
+    const { article_id } = req.params;
+
+    if (!/^\d+$/.test(article_id)) {
+        return res.status(400).send({ msg: 'Invalid article ID format' });
+    }
+
+    fetchArticleById(article_id)
+        .then((article) => fetchCommentsByArticleId(article_id))
+        .then((comments) => res.status(200).send({ comments }))
+        .catch(next);
+};
