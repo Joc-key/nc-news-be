@@ -3,8 +3,9 @@ const db = require('../db/connection')
 const testData = require('../db/data/test-data/index')
 const request = require('supertest')
 const app = require('../server/app')
-const { getTopics } = require('../server/controller')
 const endpoints = require('../endpoints.json')
+const toBeSortedBy = require('jest-sorted');
+const { fetchTopics, fetchArticleById, fetchArticles, fetchCommentsByArticleId } = require('../server/model');
 
 beforeEach(() => seed(testData));
 afterAll(() => db.end());
@@ -116,7 +117,7 @@ describe('GET /api/articles/:article_id', () => {
 
 describe('GET /api/articles', () => {
     test('should return all articles as an array', () => {
-      request(app)
+      return request(app)
         .get('/api/articles')
         .expect(200)
         .expect((res) => {
@@ -125,7 +126,7 @@ describe('GET /api/articles', () => {
         })
     })
     test('should return articles with correct properties', () => {
-        request(app)
+        return request(app)
         .get('/api/articles')
         .expect(200)
         .expect((res) => {
@@ -142,7 +143,7 @@ describe('GET /api/articles', () => {
         })
     })
     test('should not be a body property present on any of the article objects', () => {
-        request(app)
+        return request(app)
         .get('/api/articles')
         .expect(200)
         .expect((res) => {
@@ -180,3 +181,54 @@ describe('GET /api/articles', () => {
             .expect(500);
     })
 })
+
+describe('GET /api/articles/:article_id/comments', () => {
+    test('should return an empty array when there is no comments', () => {
+        return request(app)
+          .get('/api/articles/2/comments')
+          .expect(200)
+          .expect((res) => {
+            expect(res.body).toHaveProperty('comments');
+            expect(res.body.comments).toBeInstanceOf(Array);
+            expect(res.body.comments).toHaveLength(0);
+          });
+      });
+    test('should get all comments for an article', () => {
+        return request(app)
+        .get('/api/articles/1/comments')
+        .expect(200)
+        .expect((res) => {
+            expect(res.body).toHaveProperty('comments');
+            expect(res.body.comments).toBeInstanceOf(Array);
+        })
+    })
+    test('should get all comments for an article and return them in descending order', () => {
+        return request(app)
+          .get('/api/articles/1/comments')
+          .expect(200)
+          .expect((res) => {
+            const comments = res.body.comments[0]
+            expect(res.body.comments).toBeSortedBy('created_at', { descending: true });
+            expect(comments).toHaveProperty('comment_id');
+            expect(comments).toHaveProperty('votes');
+            expect(comments).toHaveProperty('created_at');
+            expect(comments).toHaveProperty('author');
+            expect(comments).toHaveProperty('body');
+            expect(comments).toHaveProperty('article_id');
+          })
+      })
+      test('should give 404 for incorrect Id', () => {
+        return request(app)
+          .get('/api/articles/94613/comments')
+          .expect(404)
+          .expect((res) => {
+            expect(res.body).toHaveProperty('msg', 'Article not found');
+          })
+      })
+      test('should return 400 for an invalid article ID format', () => {
+        return request(app)
+          .get('/api/articles/biscuits/comments')
+          .expect(400);
+      });
+});
+
