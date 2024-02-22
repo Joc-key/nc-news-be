@@ -68,4 +68,18 @@ function fetchCommentsByArticleId(article_id) {
     });
 }
 
-module.exports = { fetchTopics, fetchArticleById, fetchArticles, fetchCommentsByArticleId }
+function addComment(article_id, username, body) {
+    return db.query(`
+        INSERT INTO comments (article_id, author, body)
+        VALUES ($1, $2, $3)
+        RETURNING *;
+    `, [article_id, username, body])
+    .then((data) => {
+        if (data.rows.length === 0) {
+            return Promise.reject({ status: 404, msg: 'Article not found' });
+        }
+        return data.rows[0];
+    })
+}
+
+module.exports = { fetchTopics, fetchArticleById, fetchArticles, fetchCommentsByArticleId, addComment }

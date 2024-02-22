@@ -5,7 +5,7 @@ const request = require('supertest')
 const app = require('../server/app')
 const endpoints = require('../endpoints.json')
 const toBeSortedBy = require('jest-sorted');
-const { fetchTopics, fetchArticleById, fetchArticles, fetchCommentsByArticleId } = require('../server/model');
+const { fetchTopics, fetchArticleById, fetchArticles, fetchCommentsByArticleId, addComment } = require('../server/model');
 
 beforeEach(() => seed(testData));
 afterAll(() => db.end());
@@ -108,10 +108,10 @@ describe('GET /api/articles/:article_id', () => {
             .get('/api/articles/12345')
             .expect(404)
     })
-    test('should return 500 for an invalid format', () => {
+    test('should return 400 for an invalid format', () => {
         return request(app)
             .get('/api/articles/biscuits')
-            .expect(500);
+            .expect(400);
     })
 })
 
@@ -175,49 +175,44 @@ describe('GET /api/articles', () => {
             .get('/api/articles/12345')
             .expect(404);
     })
-    test('should return 500 for an incorrect input ID', () => {
+    test('should return 400 for an incorrect input ID', () => {
         return request(app)
             .get('/api/articles/badformat')
-            .expect(500);
+            .expect(400);
     })
 })
 
 describe('GET /api/articles/:article_id/comments', () => {
-    test('should return an empty array when there is no comments', () => {
+    test('should return an empty array when there are no comments or get all comments for an article', () => {
         return request(app)
-          .get('/api/articles/2/comments')
+          .get(`/api/articles/2/comments`)
           .expect(200)
           .expect((res) => {
             expect(res.body).toHaveProperty('comments');
-            expect(res.body.comments).toBeInstanceOf(Array);
             expect(res.body.comments).toHaveLength(0);
-          });
-      });
-    test('should get all comments for an article', () => {
-        return request(app)
-        .get('/api/articles/1/comments')
-        .expect(200)
-        .expect((res) => {
-            expect(res.body).toHaveProperty('comments');
-            expect(res.body.comments).toBeInstanceOf(Array);
-        })
-    })
-    test('should get all comments for an article and return them in descending order', () => {
-        return request(app)
-          .get('/api/articles/1/comments')
-          .expect(200)
-          .expect((res) => {
-            const comments = res.body.comments[0]
-            expect(res.body.comments).toBeSortedBy('created_at', { descending: true });
-            expect(comments).toHaveProperty('comment_id');
-            expect(comments).toHaveProperty('votes');
-            expect(comments).toHaveProperty('created_at');
-            expect(comments).toHaveProperty('author');
-            expect(comments).toHaveProperty('body');
-            expect(comments).toHaveProperty('article_id');
           })
       })
-      test('should give 404 for incorrect Id', () => {
+    test('should get all comments for a specific Id and return them in desc order', () => {
+        return request(app)
+            .get('/api/articles/1/comments')
+            .expect(200)
+            .expect((res) => {
+                const comments = res.body.comments;
+                expect(comments).toBeSortedBy('created_at', { descending: true });
+                comments.forEach((comment) => {
+                    expect(comment.article_id).toBe(1);
+                });
+                comments.forEach((comment) => {
+                    expect(comment).toHaveProperty('comment_id');
+                    expect(comment).toHaveProperty('votes');
+                    expect(comment).toHaveProperty('created_at');
+                    expect(comment).toHaveProperty('author');
+                    expect(comment).toHaveProperty('body');
+                    expect(comment).toHaveProperty('article_id', 1);
+                })
+            })
+    })
+    test('should give 404 for incorrect Id', () => {
         return request(app)
           .get('/api/articles/94613/comments')
           .expect(404)
@@ -225,10 +220,54 @@ describe('GET /api/articles/:article_id/comments', () => {
             expect(res.body).toHaveProperty('msg', 'Article not found');
           })
       })
-      test('should return 400 for an invalid article ID format', () => {
+    test('should return 400 for an invalid article ID format', () => {
         return request(app)
-          .get('/api/articles/biscuits/comments')
-          .expect(400);
+          .get('/api/articles/uh43nn/comments')
+          .expect(400)
       });
 });
 
+describe('POST /api/articles/:article_id/comments', () => {
+    test('should add a comment for an article', () => {
+        return request(app)
+            .post('/api/articles/1/comments')
+            .send({ username: 'butter_bridge', body: 'This is a comment.' })
+            .expect(201)
+            .expect((res) => {
+                expect(res.body).toHaveProperty('comment');
+            })
+    })
+    test('should handle missing properties in the request body', () => {
+        return request(app)
+            .post('/api/articles/1/comments')
+            .send({ body: 'This is a comment.' })
+            .expect(400)
+            .expect((res) => {
+                expect(res.body).toHaveProperty('msg', 'Missing required properties in the request body');
+            })
+    });
+    test('should return 400 for an empty comment body', () => {
+        return request(app)
+            .post('/api/articles/1/comments')
+            .send({ username: 'example_user', body: '' })
+            .expect(400)
+    })
+    test('should return 404 for an article ID that doesn\'t exist', () => {
+        return request(app)
+            .post('/api/articles/12345/comments')
+            .send({ username: 'example_user', body: 'This is a comment.' })
+            .expect(404)
+            .expect((res) => {
+                expect(res.body).toHaveProperty('msg', 'Article not found');
+            })
+    })
+    test('should return 400 for a non-numeric article ID', () => {
+        return request(app)
+            .post('/api/articles/invalid_id/comments')
+            .send({ username: 'example_user', body: 'This is a comment.' })
+            .expect(400)
+            .expect((res) => {
+                expect(res.body).toHaveProperty('msg', 'Invalid input syntax');
+            })
+    })
+})
