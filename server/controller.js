@@ -1,4 +1,4 @@
-const { fetchTopics, fetchArticleById, fetchArticles, fetchCommentsByArticleId, addComment } = require('./model');
+const { fetchTopics, fetchArticleById, fetchArticles, fetchCommentsByArticleId, addComment, checkUsers } = require('./model');
 
 exports.getTopics = (req, res, next) => {
     fetchTopics()
@@ -46,8 +46,7 @@ exports.addCommentToArticle = (req, res, next) => {
         return res.status(400).send({ msg: 'Missing required properties in the request body' });
     }
 
-    fetchArticleById(article_id)
-        .then(() => addComment(article_id, username, body))
+    Promise.all([checkUsers(username), fetchArticleById(article_id), addComment(article_id, username, body)])
         .then((comment) => {
             res.status(201).send({ comment });
         })
