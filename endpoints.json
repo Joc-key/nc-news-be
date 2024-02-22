@@ -55,5 +55,26 @@
         }
       ]
     }
+  },
+  "POST /api/articles/:article_id/comments": {
+    "description": "adds a comment to an article",
+    "requestBody": {
+      "content-type": "application/json",
+      "example": {
+        "username": "example_user",
+        "body": "This is a comment."
+      }
+    },
+    "exampleResponse": {
+      "comment": {
+        "comment_id": 1,
+        "votes": 0,
+        "created_at": "2024-02-21T12:30:45.678Z",
+        "author": "example_user",
+        "body": "This is a comment.",
+        "article_id": 123
+      }
+    }
   }
 }
+
