@@ -237,6 +237,15 @@ describe('POST /api/articles/:article_id/comments', () => {
                 expect(res.body).toHaveProperty('comment');
             })
     })
+    test('should add a comment for an article, when additional properties are added', () => {
+        return request(app)
+            .post('/api/articles/1/comments')
+            .send({ username: 'butter_bridge', body: 'This is a comment.', text: 'sound mate' })
+            .expect(201)
+            .expect((res) => {
+                expect(res.body).toHaveProperty('comment');
+            })
+    })
     test('should handle missing properties in the request body', () => {
         return request(app)
             .post('/api/articles/1/comments')
@@ -246,16 +255,19 @@ describe('POST /api/articles/:article_id/comments', () => {
                 expect(res.body).toHaveProperty('msg', 'Missing required properties in the request body');
             })
     });
-    test('should return 400 for an empty comment body', () => {
+    test('should return 404 for a comment when user is not in the database', () => {
         return request(app)
             .post('/api/articles/1/comments')
-            .send({ username: 'example_user', body: '' })
-            .expect(400)
-    })
+            .send({ username: 'dave_jeff', body: 'sdfsdf' })
+            .expect(404)
+            .expect((res) => {
+                expect(res.body).toHaveProperty('msg', 'User not found');
+            })
+    });
     test('should return 404 for an article ID that doesn\'t exist', () => {
         return request(app)
             .post('/api/articles/12345/comments')
-            .send({ username: 'example_user', body: 'This is a comment.' })
+            .send({ username: 'butter_bridge', body: 'This is a comment.' })
             .expect(404)
             .expect((res) => {
                 expect(res.body).toHaveProperty('msg', 'Article not found');
@@ -264,7 +276,7 @@ describe('POST /api/articles/:article_id/comments', () => {
     test('should return 400 for a non-numeric article ID', () => {
         return request(app)
             .post('/api/articles/invalid_id/comments')
-            .send({ username: 'example_user', body: 'This is a comment.' })
+            .send({ username: 'butter_bridge', body: 'This is a comment.' })
             .expect(400)
             .expect((res) => {
                 expect(res.body).toHaveProperty('msg', 'Invalid input syntax');

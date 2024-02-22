@@ -15,9 +15,9 @@ app.get('/api/articles/:article_id', getArticleById)
 
 app.get('/api/articles', getArticles)
 
-app.get('/api/articles/:article_id/comments',getCommentsByArticleId )
+app.get('/api/articles/:article_id/comments',getCommentsByArticleId)
 
-app.post('/api/articles/:article_id/comments', addCommentToArticle);
+app.post('/api/articles/:article_id/comments', addCommentToArticle)
 
 app.all('/*', (req, res, next)=> {
     res.status(404).send({ msg: 'Path not found' })
@@ -25,7 +25,7 @@ app.all('/*', (req, res, next)=> {
 
 app.use((err, req, res, next) => {
     if (err.code === '22P02') {
-        return res.status(400).send({ msg: 'Invalid input syntax' })
+        res.status(400).send({ msg: 'Invalid input syntax' })
     }
     if (err.status && err.msg) {
         res.status(err.status).send({ msg: err.msg });

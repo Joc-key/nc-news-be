@@ -82,4 +82,16 @@ function addComment(article_id, username, body) {
     })
 }
 
-module.exports = { fetchTopics, fetchArticleById, fetchArticles, fetchCommentsByArticleId, addComment }
+function checkUsers(username) {
+    return db.query(`
+        SELECT username FROM users
+        WHERE username = $1;
+    `, [username])
+    .then((data) => {
+        if (data.rows.length === 0) {
+            return Promise.reject({ status: 404, msg: 'User not found'})
+        }
+    })
+}
+
+module.exports = { fetchTopics, fetchArticleById, fetchArticles, fetchCommentsByArticleId, addComment, checkUsers }
