@@ -16,6 +16,13 @@ describe('requests', () => {
             .get('/api/biscuits')
             .expect(404);
     })
+    test('should give 404 when table not found', () => {
+        return request(app)
+            .get('/api/userszxc')
+            .then(response => {
+                expect(response.status).toBe(404);
+            })
+    })
 })
 
 describe('getTopics',() => {
@@ -179,6 +186,27 @@ describe('GET /api/articles', () => {
         return request(app)
             .get('/api/articles/badformat')
             .expect(400);
+    })
+    test('should return 200 with articles for a normal topic', () => {
+        return request(app)
+            .get('/api/articles?topic=cats')
+            .expect(200)
+    })
+    test('should return 200 for a valid topic with no articles', () => {
+        return request(app)
+            .get('/api/articles?topic=paper')
+            .expect(200)
+            .expect((res) => {
+                expect(res.body).toHaveProperty('msg', 'Topic has no articles');
+            })
+    })
+    test('should return 404 for an invalid topic', () => {
+        return request(app)
+            .get('/api/articles?topic=invalidTopic')
+            .expect(404)
+            .expect((res) => {
+                expect(res.body).toHaveProperty('msg', 'Topic not found');
+            })
     })
 })
 
@@ -376,19 +404,13 @@ describe('GET /api/users', () => {
 
                 const users = response.body.users;
                 expect(Array.isArray(users)).toBe(true);
+                expect(users.length).toBeGreaterThanOrEqual(0)
 
                 users.forEach((user) => {
                     expect(user).toHaveProperty('username');
                     expect(user).toHaveProperty('name');
                     expect(user).toHaveProperty('avatar_url');
                 })
-            })
-    })
-    test('should give 404 when not found database', () => {
-        return request(app)
-            .get('/api/userszxc')
-            .then(response => {
-                expect(response.status).toBe(404);
             })
     })
 })
