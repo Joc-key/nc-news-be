@@ -96,5 +96,16 @@
         "article_img_url": "https://example.com/image.jpg"
       }
     }
+  },
+  "DELETE /api/comments/:comment_id": {
+    "description": "deletes a comment by its id",
+    "exampleResponse": {
+      "status": 204,
+      "msg": "Comment deleted"
+    },
+    "errorResponses": {
+      "status": 404,
+      "msg": "Comment not found"
+    }
   }
 }

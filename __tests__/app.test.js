@@ -341,4 +341,28 @@ describe('PATCH /api/articles/:article_id', () => {
           expect(res.body).toHaveProperty('msg', "Invalid or missing inc_votes property in the request body");
         })
     })
-  })
+})
+
+describe('DELETE /api/comments/:comment_id', () => {
+    test('should delete a comment and respond with status 204', () => {
+      return request(app)
+        .delete('/api/comments/1')
+        .expect(204);
+    });
+    test('should respond with status 404 for an invalid comment_id', () => {
+      return request(app)
+        .delete('/api/comments/124141')
+        .expect(404)
+        .expect((res) => {
+          expect(res.body).toHaveProperty('msg', 'Comment not found');
+        });
+    })
+    test('should respond with status 400 for an invalid comment_id format', () => {
+        return request(app)
+          .delete('/api/comments/invalidFormat')
+          .expect(400)
+          .expect((res) => {
+            expect(res.body).toHaveProperty('msg', 'Invalid input syntax');
+          })
+      })
+})
