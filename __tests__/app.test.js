@@ -283,3 +283,62 @@ describe('POST /api/articles/:article_id/comments', () => {
             })
     })
 })
+
+describe('PATCH /api/articles/:article_id', () => {
+    test('should update the votes property of an article', () => {
+      return request(app)
+        .patch('/api/articles/1')
+        .send({ inc_votes: 1 })
+        .expect(200)
+        .expect((res) => {
+            const updatedArticle = res.body.article;
+            expect(updatedArticle.votes).toBe(101);
+        })
+    })
+    test('should decrease the votes property of an article', () => {
+      return request(app)
+        .patch('/api/articles/1')
+        .send({ inc_votes: -100 })
+        .expect(200)
+        .expect((res) => {
+            const updatedArticle = res.body.article;
+            expect(updatedArticle.votes).toBe(0);
+        })
+    })
+    test('should return 404 for an incorrect article ID', () => {
+      return request(app)
+        .patch('/api/articles/12345')
+        .send({ inc_votes: 1 })
+        .expect(404)
+        .expect((res) => {
+          expect(res.body).toHaveProperty('msg', 'Article not found');
+        })
+    })
+    test('should return 400 for a non-numeric article ID', () => {
+      return request(app)
+        .patch('/api/articles/invalid_id')
+        .send({ inc_votes: 1 })
+        .expect(400)
+        .expect((res) => {
+          expect(res.body).toHaveProperty('msg', 'Invalid input syntax');
+        })
+    })
+    test('should return 400 for missing inc_votes in the request body', () => {
+      return request(app)
+        .patch('/api/articles/1')
+        .send({})
+        .expect(400)
+        .expect((res) => {
+          expect(res.body).toHaveProperty('msg', "Invalid or missing inc_votes property in the request body");
+        })
+    })
+    test('should return 400 for invalid inc_votes value in the request body', () => {
+      return request(app)
+        .patch('/api/articles/1')
+        .send({ inc_votes: '' })
+        .expect(400)
+        .expect((res) => {
+          expect(res.body).toHaveProperty('msg', "Invalid or missing inc_votes property in the request body");
+        })
+    })
+  })
