@@ -30,6 +30,9 @@ app.all('/*', (req, res, next)=> {
 });
 
 app.use((err, req, res, next) => {
+    if (err.code === '42803') {
+        res.status(200).send({ msg: 'Topic has no articles'})
+    }
     if (err.code === '22P02') {
         res.status(400).send({ msg: 'Invalid input syntax' })
     }
