@@ -109,4 +109,24 @@ function updateVotes(article_id, inc_votes) {
     })
 }
 
-module.exports = { fetchTopics, fetchArticleById, fetchArticles, fetchCommentsByArticleId, addComment, checkUsers, updateVotes }
+function fetchCommentById(comment_id) {
+    return db.query(`
+        SELECT * FROM comments
+        WHERE comment_id = $1;
+    `, [comment_id])
+    .then((data) => {
+        if (data.rows.length === 0) {
+            return Promise.reject({ status: 404, msg: 'Comment not found' });
+        }
+        return data.rows[0];
+    });
+}
+
+function deleteComment(comment_id) {
+    return db.query(`
+        DELETE FROM comments
+        WHERE comment_id = $1;
+    `, [comment_id]);
+}
+
+module.exports = { fetchTopics, fetchArticleById, fetchArticles, fetchCommentsByArticleId, addComment, checkUsers, updateVotes, fetchCommentById, deleteComment }
