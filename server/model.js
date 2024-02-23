@@ -129,4 +129,14 @@ function deleteComment(comment_id) {
     `, [comment_id]);
 }
 
-module.exports = { fetchTopics, fetchArticleById, fetchArticles, fetchCommentsByArticleId, addComment, checkUsers, updateVotes, fetchCommentById, deleteComment }
+function fetchUsers(){
+    return db.query(`
+        SELECT username, name, avatar_url 
+        FROM users;
+    `)
+    .then((data) => {
+        return data.rows;
+    });
+};
+
+module.exports = { fetchTopics, fetchArticleById, fetchArticles, fetchCommentsByArticleId, addComment, checkUsers, updateVotes, fetchCommentById, deleteComment, fetchUsers }

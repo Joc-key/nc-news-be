@@ -366,3 +366,29 @@ describe('DELETE /api/comments/:comment_id', () => {
           })
       })
 })
+
+describe('GET /api/users', () => {
+    test('should return an array of users with username, name, and avatar_url properties', () => {
+        return request(app)
+            .get('/api/users')
+            .then(response => {
+                expect(response.status).toBe(200);
+
+                const users = response.body.users;
+                expect(Array.isArray(users)).toBe(true);
+
+                users.forEach((user) => {
+                    expect(user).toHaveProperty('username');
+                    expect(user).toHaveProperty('name');
+                    expect(user).toHaveProperty('avatar_url');
+                })
+            })
+    })
+    test('should give 404 when not found database', () => {
+        return request(app)
+            .get('/api/userszxc')
+            .then(response => {
+                expect(response.status).toBe(404);
+            })
+    })
+})
